@@ -28,6 +28,7 @@ Time per request:       0.104 [ms] (mean)
 
 ### `ab` TLS HTTP/1.1
 ```
+$ ab -n 100 -k https://localhost.xs4all.net:8082/
 Time taken for tests:   1.917 seconds
 Complete requests:      100
 Requests per second:    52.16 [#/sec] (mean)
