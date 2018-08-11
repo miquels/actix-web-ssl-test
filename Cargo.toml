@@ -1,0 +1,10 @@
+[package]
+name = "actix-web-ssl-test"
+version = "0.1.0"
+authors = ["mikevs <mikevs@xs4all.net>"]
+
+[dependencies]
+actix = "0.7.3"
+actix-web = { version = "0.7.3", features = [ "alpn", "tls" ] }
+openssl = "0.10"
+native-tls = "0.1.5"
