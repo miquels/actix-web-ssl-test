@@ -11,11 +11,14 @@ native_tls is just a wrapper around openssl on Linux.
 However, it appears that HTTP/2 is quite a bit slower than HTTP/1.1, which is
 unexpected since a design goal of HTTP/2 is to be faster than HTTP1.1.
 
-Also, `ab` (apachebench) performance is disappointing. I think it renegotiates something
-TLS related for every request. As `curl` does not do this, it must be something `ab`-specific.
-Might be worth figuring out what, to see if any real-world clients show the same behaviour.
+Testing with `ab` (apachebench) gives some weird results. The performance is quite
+disappointing. This is because `ab` still uses HTTP/1.0. The `-k` command line
+switch makes it send the `Connection: keep-alive` header, but `actix-web` ignores that
+header and bases keep-alive only on the HTTP version (<= 1.0: off, >= 1.1: on).
+The code has been fixed now to force `actix-web` to use a keep-alive connection even
+on HTTP/1.0 if there is a `Connection: keep-alive` header.
 
-## Performance testing using `ab`
+## Performance testing using `ab` before the actix-web keep-alive fix.
 
 ### `ab` plaintext HTTP/1.1
 ```
@@ -35,6 +38,47 @@ Requests per second:    52.16 [#/sec] (mean)
 Time per request:       19.173 [ms] (mean)
 ```
 
+## Performance testing using `ab` after the actix-web keep-alive fix.
+
+### `ab` plaintext HTTP/1.1
+```
+$ ab -k -n 10000 http://localhost.xs4all.net:8080/
+Time taken for tests:   0.293 seconds
+Complete requests:      10000
+Requests per second:    34158.72 [#/sec] (mean)
+Time per request:       0.029 [ms] (mean)
+```
+
+### `ab` TLS HTTP/1.1
+```
+$ ab -k -n 10000 https://localhost.xs4all.net:8082/
+Time taken for tests:   0.437 seconds
+Complete requests:      10000
+Requests per second:    22899.91 [#/sec] (mean)
+Time per request:       0.044 [ms] (mean)
+```
+
+## Performance testing using `ab` with Keep-Alive, and concurrency:
+
+### `ab` plaintext HTTP/1.1, 32 threads
+```
+$ ab -c 32 -k -n 10000 http://localhost.xs4all.net:8080/
+Concurrency Level:      32
+Time taken for tests:   0.102 seconds
+Complete requests:      10000
+Requests per second:    98489.18 [#/sec] (mean)
+Time per request:       0.010 [ms] (mean, across all concurrent requests)
+```
+
+### `ab` TLS HTTP/1.1, 32 threads
+```
+$ ab -c 32 -k -n 10000 https://localhost.xs4all.net:8082/
+Concurrency Level:      32
+Time taken for tests:   0.168 seconds
+Complete requests:      10000
+Requests per second:    59394.77 [#/sec] (mean)
+Time per request:       0.017 [ms] (mean, across all concurrent requests)
+```
 
 ## Performance test using curl.
 
