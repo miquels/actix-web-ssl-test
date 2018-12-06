@@ -1,11 +1,8 @@
-extern crate actix_web;
-extern crate openssl;
-extern crate native_tls;
-
 use std::io::Read;
 
 use actix_web::{server, App, HttpRequest, Responder};
 use openssl::ssl::{SslAcceptor, SslAcceptorBuilder, SslFiletype, SslMethod};
+use native_tls;
 
 fn index(_req: &HttpRequest) -> impl Responder {
     ""
@@ -30,8 +27,8 @@ pub fn tls_acceptor() -> native_tls::TlsAcceptor {
         }).expect("opening .p12");
     let mut der = vec![];
     file.read_to_end(&mut der).unwrap();
-    let cert = native_tls::Pkcs12::from_der(&der, "").expect("failed to read .p12");
-    let tls_cx = native_tls::TlsAcceptor::builder(cert).unwrap().build().unwrap();
+    let cert = native_tls::Identity::from_pkcs12(&der, "").expect("failed to read .p12");
+    let tls_cx = native_tls::TlsAcceptor::builder(cert).build().unwrap();
     native_tls::TlsAcceptor::from(tls_cx)
 }
 

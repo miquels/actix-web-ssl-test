@@ -8,4 +8,4 @@ edition = "2018"
 actix = "0.7.3"
 actix-web = { version = "0.7.3", features = [ "alpn", "tls" ] }
 openssl = "0.10"
-native-tls = "0.1.5"
+native-tls = "0.2.2"
